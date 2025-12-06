@@ -25,7 +25,19 @@ public class Main {
 
     public static void main(String[] args) {
         
-        System.out.println("Default main executed.");
+        // Install FlatLaf for a modern look-and-feel. If FlatLaf isn't available
+        // the app will fall back to the default L&F.
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+            // Tweak some defaults for a slightly more modern appearance
+            UIManager.put("Table.rowHeight", 26);
+            UIManager.put("Button.focusWidth", 2);
+            UIManager.put("Component.focusWidth", 2);
+        } catch (Exception ex) {
+            System.err.println("FlatLaf not available, using default L&F: " + ex.getMessage());
+        }
+
+        SwingUtilities.invokeLater(() -> new Main().buildGui());
     }
 
 }
