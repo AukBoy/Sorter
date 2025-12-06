@@ -13,6 +13,15 @@ import com.formdev.flatlaf.FlatDarkLaf;
 
 
 public class Main {
+    private JFrame frame;
+    private JTable previewTable;
+    private JComboBox<String> columnBox;
+    private JCheckBox javaSortBox, quickSortBox, mergeSortBox, heapSortBox, bubbleSortBox;
+    private JTextArea resultsArea;
+    private BarChartPanel chartPanel;
+    private JLabel bestLabel;
+    private JToggleButton themeToggle;
+    private CsvLoader.CsvTable table;
 
     public static void main(String[] args) {
         
