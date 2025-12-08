@@ -179,7 +179,7 @@ public class Main {
         return true;
     }
 
-        private void onRun(ActionEvent e) {
+    private void onRun(ActionEvent e) {
         if (table == null) { JOptionPane.showMessageDialog(frame, "Open a CSV first."); return; }
         int col = columnBox.getSelectedIndex();
         if (col < 0) { JOptionPane.showMessageDialog(frame, "Select a column."); return; }
@@ -240,3 +240,17 @@ public class Main {
             dlg.pack();
             dlg.setLocationRelativeTo(frame);
             dlg.setVisible(true);
+
+            int ans = JOptionPane.showConfirmDialog(frame,
+                    "Sort the full table using the best algorithm?",
+                    "Apply Best Sort",
+                    JOptionPane.YES_NO_OPTION);
+            if (ans == JOptionPane.YES_OPTION) {
+                applyAlgorithmToTable(best.algorithm, table, col);
+                updatePreview();
+                JOptionPane.showMessageDialog(frame, "Table sorted using " + best.algorithm);
+            }
+        } else {
+            bestLabel.setText("Best: n/a");
+        }
+    }
