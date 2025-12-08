@@ -373,3 +373,22 @@ public class Main {
             }
         }
     }
+    /** Renderer that highlights the currently selected column from the combo box. */
+    private class ColumnHighlightRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            int sel = columnBox.getSelectedIndex();
+            if (sel >= 0 && column == sel) {
+                c.setBackground(new Color(0xFFF9C4)); // light yellow
+            } else {
+                if (isSelected) c.setBackground(table.getSelectionBackground());
+                else c.setBackground(table.getBackground());
+            }
+            return c;
+        }
+    }
+
+    private interface AlgorithmRunner { void run(List<String[]> rows, int colIndex); }
+}
