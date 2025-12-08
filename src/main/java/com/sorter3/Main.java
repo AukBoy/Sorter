@@ -36,3 +36,55 @@ public class Main {
 
         SwingUtilities.invokeLater(() -> new Main().buildGui());
     }
+
+    private void buildGui() {
+        frame = new JFrame("CSV Sorter & Benchmark");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(900, 600);
+        frame.setLayout(new BorderLayout());
+
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton openBtn = new JButton("Open CSV");
+        openBtn.addActionListener(this::onOpen);
+        top.add(openBtn);
+
+        columnBox = new JComboBox<>();
+        top.add(new JLabel("Sort by:"));
+        top.add(columnBox);
+        columnBox.addActionListener(ev -> {
+            if (previewTable != null) previewTable.repaint();
+        });
+
+        insertionSortBox = new JCheckBox("InsertionSort", true);
+        shellSortBox = new JCheckBox("ShellSort", true);
+        mergeSortBox = new JCheckBox("MergeSort", true);
+        quickSortBox = new JCheckBox("QuickSort", true);
+        heapSortBox = new JCheckBox("HeapSort", true);
+
+        top.add(insertionSortBox);
+        top.add(shellSortBox);
+        top.add(mergeSortBox);
+        top.add(quickSortBox);
+        top.add(heapSortBox);
+
+        JButton runBtn = new JButton("Run Sort");
+        runBtn.addActionListener(this::onRun);
+        top.add(runBtn);
+
+        themeToggle = new JToggleButton("Dark Mode");
+        themeToggle.addItemListener(ev -> applyTheme(themeToggle.isSelected()));
+        top.add(themeToggle);
+
+        frame.add(top, BorderLayout.NORTH);
+
+        previewTable = new JTable();
+        previewTable.setDefaultRenderer(Object.class, new ColumnHighlightRenderer());
+
+        
+        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+            new JScrollPane(previewTable), right);
+        centerSplit.setResizeWeight(0.6);
+        frame.add(centerSplit, BorderLayout.CENTER);
+
+        frame.setVisible(true);
+    }
