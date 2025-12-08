@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
+import java.util.Collections; // Needed for Shuffle in QuickSort/etc
 
 public class Main {
     private JFrame frame;
@@ -70,7 +71,7 @@ public class Main {
         top.add(heapSortBox);
 
 
-        JButton runBtn = new JButton("Run Sorted");
+        JButton runBtn = new JButton("Run Benchmark"); // Changed button text for clarity
         runBtn.addActionListener(this::onRun);
         top.add(runBtn);
 
@@ -126,6 +127,8 @@ public class Main {
 
     private void onOpen(ActionEvent e) {
         JFileChooser chooser = new JFileChooser();
+        // Set to current directory for convenience
+        chooser.setCurrentDirectory(new File(".")); 
         int r = chooser.showOpenDialog(frame);
         if (r != JFileChooser.APPROVE_OPTION) return;
         File f = chooser.getSelectedFile();
@@ -148,14 +151,55 @@ public class Main {
         previewTable.setModel(model);
     }
 
+    // --- Start of Numeric Check Logic ---
+
+    /**
+     * Tries to determine if the column at colIndex contains numeric data
+     * by checking the first 50 rows.
+     */
+    private boolean isColumnNumeric(int colIndex) {
+        if (table == null || table.rows.isEmpty()) return false;
+        int checkCount = Math.min(50, table.rows.size());
+        for (int i = 0; i < checkCount; i++) {
+            String[] row = table.rows.get(i);
+            if (colIndex >= row.length) continue; // safety check
+
+            String value = row[colIndex].trim();
+            if (value.isEmpty()) continue;
+
+            try {
+                // Try parsing the value as a double
+                Double.parseDouble(value);
+            } catch (NumberFormatException e) {
+                // If parsing fails for any non-empty value, assume non-numeric
+                return false;
+            }
+        }
+        // Passed the checks (or table was too small/empty)
+        return true;
+    }
+
+    // --- End of Numeric Check Logic ---
+
     private void onRun(ActionEvent e) {
         if (table == null) { JOptionPane.showMessageDialog(frame, "Open a CSV first."); return; }
         int col = columnBox.getSelectedIndex();
         if (col < 0) { JOptionPane.showMessageDialog(frame, "Select a column."); return; }
 
+        // CHECK IF THE SELECTED COLUMN IS NUMERIC
+        if (!isColumnNumeric(col)) {
+            JOptionPane.showMessageDialog(frame, 
+                "The selected column ('" + columnBox.getSelectedItem() + "') does not appear to contain numeric data.\n" +
+                "The current sort implementations only reliably support numeric data for benchmarking.", 
+                "Data Type Error", 
+                JOptionPane.ERROR_MESSAGE);
+            return; 
+        }
+
         resultsArea.setText("");
         List<SortResult> results = new ArrayList<>();
 
+        // The comparator logic for all algorithms is now based on comparing parsed double values.
         if (insertionSortBox.isSelected()) results.add(runAlgorithm("InsertionSort", table, col, InsertionSort::sort));
         if (shellSortBox.isSelected()) results.add(runAlgorithm("ShellSort", table, col, ShellSort::sort));
         if (mergeSortBox.isSelected()) results.add(runAlgorithm("MergeSort", table, col, MergeSort::sort));
@@ -168,7 +212,7 @@ public class Main {
             sb.append(String.format("%-15s : %6d ms\n", r.algorithm, r.durationMillis));
             int show = Math.min(5, r.sampleRows.size());
             for (int i = 0; i < show; i++) {
-                sb.append(String.join(", ", r.sampleRows.get(i))).append("\n");
+                sb.append("  ").append(String.join(", ", r.sampleRows.get(i))).append("\n"); // Indent sample rows
             }
             sb.append("\n");
         }
@@ -200,7 +244,9 @@ public class Main {
             dlg.pack();
             dlg.setLocationRelativeTo(frame);
             dlg.setVisible(true);
+            
             // After the user closes the summary dialog, ask if they'd like to sort
+            // This is done *after* the JDialog is closed, making it a modal sequence.
             int ans = JOptionPane.showConfirmDialog(frame,
                     "Sort the full table using the best algorithm?",
                     "Apply Best Sort",
@@ -245,14 +291,24 @@ public class Main {
         // Copy rows to avoid mutating original
         List<String[]> copy = new ArrayList<>(table.rows.size());
         for (String[] r : table.rows) copy.add(r.clone());
+
+        // QuickSort benefits greatly from shuffling a large, non-random dataset
+        if (name.equals("QuickSort") && copy.size() > 1000) {
+             Collections.shuffle(copy);
+        }
+
         long t0 = System.nanoTime();
         runner.run(copy, colIndex);
         long t1 = System.nanoTime();
         long ms = (t1 - t0) / 1_000_000;
+        
         List<String[]> sample = new ArrayList<>();
-        for (int i = 0; i < Math.min(10, copy.size()); i++) sample.add(copy.get(i));
+        // Take a sample from the *sorted* copy
+        for (int i = 0; i < Math.min(10, copy.size()); i++) sample.add(copy.get(i)); 
+        
         return new SortResult(name, ms, sample);
     }
+    
     /** Simple bar chart panel to display durations per algorithm. */
     private static class BarChartPanel extends JPanel {
         private List<SortResult> results = List.of();
@@ -268,8 +324,7 @@ public class Main {
             try {
                 int w = getWidth();
                 int h = getHeight();
-                g2.setColor(getBackground());
-                g2.fillRect(0,0,w,h);
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                 if (results == null || results.isEmpty()) {
                     g2.setColor(Color.GRAY);
@@ -279,35 +334,51 @@ public class Main {
 
                 long max = results.stream().mapToLong(r -> Math.max(1, r.durationMillis)).max().orElse(1);
                 int padding = 40;
+                int chartBottom = h - padding;
+                int chartTop = padding;
+                int chartHeight = chartBottom - chartTop;
+
+                // Draw base line
+                g2.setColor(Color.LIGHT_GRAY);
+                g2.drawLine(padding, chartBottom, w - padding, chartBottom);
+                
                 int availableW = w - padding * 2;
-                int barWidth = Math.max(24, availableW / results.size() - 10);
-                int gap = Math.max(6, (availableW - barWidth * results.size()) / Math.max(1, results.size() - 1));
-                int x = padding;
-                // find best (min)
+                int barCount = results.size();
+                int totalGapWidth = availableW / (barCount * 4); // Example gap logic
+                int barWidth = Math.max(20, (availableW - (barCount - 1) * totalGapWidth) / barCount);
+                int gap = Math.max(5, totalGapWidth);
+                
+                int x = padding + (availableW - (barWidth * barCount + gap * (barCount - 1))) / 2;
+                
+                // Find best (min)
                 SortResult best = results.stream().min((a,b)->Long.compare(a.durationMillis,b.durationMillis)).get();
+                Color bestColor = new Color(0x2E7D32); // Green
+                Color defaultColor = new Color(0x1976D2); // Blue
 
                 for (SortResult r : results) {
                     double ratio = (double) r.durationMillis / (double) max;
-                    int barH = (int) ((h - 100) * ratio);
-                    int y = h - padding - barH - 30;
+                    // Leave space for value on top and labels on bottom
+                    int barH = (int) (chartHeight * ratio);
+                    int y = chartBottom - barH;
 
                     // Color: green for best, blue for others
-                    if (r == best) g2.setColor(new Color(0x2E7D32)); else g2.setColor(new Color(0x1976D2));
+                    g2.setColor(r == best ? bestColor : defaultColor);
                     g2.fillRoundRect(x, y, barWidth, Math.max(4, barH), 8, 8);
-
+                    
+                    // Draw algorithm label (Name)
                     g2.setColor(Color.DARK_GRAY);
                     String label = r.algorithm;
                     FontMetrics fm = g2.getFontMetrics();
                     int labelW = fm.stringWidth(label);
                     int lx = x + (barWidth - labelW) / 2;
-                    int ly = h - padding - 8;
+                    int ly = chartBottom + fm.getHeight(); // Below the base line
                     g2.drawString(label, Math.max(lx, x), ly);
 
-                    // draw value on top
+                    // Draw value on top (Time)
                     String val = r.durationMillis + " ms";
                     int vw = fm.stringWidth(val);
                     int vx = x + (barWidth - vw) / 2;
-                    int vy = Math.max(12, y - 6);
+                    int vy = Math.max(chartTop + 10, y - 6);
                     g2.setColor(Color.BLACK);
                     g2.drawString(val, Math.max(vx, x), vy);
 
