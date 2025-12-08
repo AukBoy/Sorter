@@ -254,6 +254,7 @@ public class Main {
             bestLabel.setText("Best: n/a");
         }
     }
+
     private void applyAlgorithmToTable(String algorithm, CsvLoader.CsvTable table, int colIndex) {
         if (table == null) return;
         switch (algorithm) {
@@ -276,4 +277,24 @@ public class Main {
                 QuickSort.sort(table.rows, colIndex);
                 break;
         }
+    }
+
+
+    private SortResult runAlgorithm(String name, CsvLoader.CsvTable table, int colIndex, AlgorithmRunner runner) {
+        List<String[]> copy = new ArrayList<>(table.rows.size());
+        for (String[] r : table.rows) copy.add(r.clone());
+
+        if (name.equals("QuickSort") && copy.size() > 1000) {
+             Collections.shuffle(copy);
+        }
+
+        long t0 = System.nanoTime();
+        runner.run(copy, colIndex);
+        long t1 = System.nanoTime();
+        long ms = (t1 - t0) / 1_000_000;
+        
+        List<String[]> sample = new ArrayList<>();
+        for (int i = 0; i < Math.min(10, copy.size()); i++) sample.add(copy.get(i)); 
+        
+        return new SortResult(name, ms, sample);
     }
