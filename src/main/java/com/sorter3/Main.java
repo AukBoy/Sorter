@@ -104,3 +104,14 @@ public class Main {
 
         frame.setVisible(true);
     }
+
+    private void applyTheme(boolean dark) {// GUI layout- dark mode and light mode
+        try {
+            UIManager.setLookAndFeel(dark ? new FlatDarkLaf() : new FlatLightLaf());
+            SwingUtilities.updateComponentTreeUI(frame);
+            frame.invalidate();
+            frame.validate();
+        } catch (Exception ex) {
+            System.err.println("Failed to switch theme: " + ex.getMessage());
+        }
+    }
