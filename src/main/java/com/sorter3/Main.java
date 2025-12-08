@@ -178,3 +178,18 @@ public class Main {
         }
         return true;
     }
+
+        private void onRun(ActionEvent e) {
+        if (table == null) { JOptionPane.showMessageDialog(frame, "Open a CSV first."); return; }
+        int col = columnBox.getSelectedIndex();
+        if (col < 0) { JOptionPane.showMessageDialog(frame, "Select a column."); return; }
+
+        // Numeric data check
+        if (!isColumnNumeric(col)) {
+            JOptionPane.showMessageDialog(frame, 
+                "The selected column ('" + columnBox.getSelectedItem() + "') does not appear to contain numeric data.\n" +
+                "The current sort implementations only reliably support numeric data for benchmarking.", 
+                "Data Type Error", 
+                JOptionPane.ERROR_MESSAGE);
+            return; 
+        }
