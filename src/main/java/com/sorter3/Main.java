@@ -298,3 +298,78 @@ public class Main {
         
         return new SortResult(name, ms, sample);
     }
+
+    /** Simple bar chart panel to display durations per algorithm. */
+    private static class BarChartPanel extends JPanel {
+        private List<SortResult> results = List.of();
+
+        public void setResults(List<SortResult> results) {
+            this.results = results == null ? List.of() : results;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            try {
+                int w = getWidth();
+                int h = getHeight();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                if (results == null || results.isEmpty()) {
+                    g2.setColor(Color.GRAY);
+                    g2.drawString("No results to display", 10, 20);
+                    return;
+                }
+
+                long max = results.stream().mapToLong(r -> Math.max(1, r.durationMillis)).max().orElse(1);
+                int padding = 40;
+                int chartBottom = h - padding;
+                int chartTop = padding;
+                int chartHeight = chartBottom - chartTop;
+
+                g2.setColor(Color.LIGHT_GRAY);
+                g2.drawLine(padding, chartBottom, w - padding, chartBottom);
+                
+                int availableW = w - padding * 2;
+                int barCount = results.size();
+                int totalGapWidth = availableW / (barCount * 4); 
+                int barWidth = Math.max(20, (availableW - (barCount - 1) * totalGapWidth) / barCount);
+                int gap = Math.max(5, totalGapWidth);
+                
+                int x = padding + (availableW - (barWidth * barCount + gap * (barCount - 1))) / 2;
+                
+                SortResult best = results.stream().min((a,b)->Long.compare(a.durationMillis,b.durationMillis)).get();
+                Color bestColor = new Color(0x2E7D32); // Green
+                Color defaultColor = new Color(0x1976D2); // Blue
+
+                for (SortResult r : results) {
+                    double ratio = (double) r.durationMillis / (double) max;
+                    int barH = (int) (chartHeight * ratio);
+                    int y = chartBottom - barH;
+
+                    g2.setColor(r == best ? bestColor : defaultColor);
+                    g2.fillRoundRect(x, y, barWidth, Math.max(4, barH), 8, 8);
+                    
+                    g2.setColor(Color.DARK_GRAY);
+                    String label = r.algorithm;
+                    FontMetrics fm = g2.getFontMetrics();
+                    int labelW = fm.stringWidth(label);
+                    int lx = x + (barWidth - labelW) / 2;
+                    int ly = chartBottom + fm.getHeight(); 
+                    g2.drawString(label, Math.max(lx, x), ly);
+
+                    String val = r.durationMillis + " ms";
+                    int vw = fm.stringWidth(val);
+                    int vx = x + (barWidth - vw) / 2;
+                    int vy = Math.max(chartTop + 10, y - 6);
+                    g2.setColor(Color.BLACK);
+                    g2.drawString(val, Math.max(vx, x), vy);
+
+                    x += barWidth + gap;
+                }
+            } finally {
+                g2.dispose();
+            }
+        }
+    }
