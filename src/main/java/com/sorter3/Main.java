@@ -80,6 +80,22 @@ public class Main {
         previewTable = new JTable();
         previewTable.setDefaultRenderer(Object.class, new ColumnHighlightRenderer());
 
+        JPanel right = new JPanel();
+        right.setLayout(new BorderLayout());
+
+        chartPanel = new BarChartPanel();
+        chartPanel.setPreferredSize(new Dimension(350, 300));
+        right.add(chartPanel, BorderLayout.CENTER);
+
+        resultsArea = new JTextArea();
+        resultsArea.setEditable(false);
+        resultsArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        resultsArea.setRows(8);
+        right.add(new JScrollPane(resultsArea), BorderLayout.SOUTH);
+
+        bestLabel = new JLabel("Best: n/a");
+        bestLabel.setBorder(BorderFactory.createEmptyBorder(6,6,6,6));
+        right.add(bestLabel, BorderLayout.NORTH);
         
         JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
             new JScrollPane(previewTable), right);
