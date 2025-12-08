@@ -159,3 +159,22 @@ public class Main {
         for (int i = 0; i < preview; i++) model.addRow(table.rows.get(i));
         previewTable.setModel(model);
     }
+
+    private boolean isColumnNumeric(int colIndex) {
+        if (table == null || table.rows.isEmpty()) return false;
+        int checkCount = Math.min(50, table.rows.size());
+        for (int i = 0; i < checkCount; i++) {
+            String[] row = table.rows.get(i);
+            if (colIndex >= row.length) continue; 
+
+            String value = row[colIndex].trim();
+            if (value.isEmpty()) continue;
+
+            try {
+                Double.parseDouble(value);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return true;
+    }
