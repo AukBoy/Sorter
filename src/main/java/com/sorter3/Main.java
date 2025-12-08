@@ -15,7 +15,7 @@ public class Main {
     private JFrame frame;
     private JTable previewTable;
     private JComboBox<String> columnBox;
-    private JCheckBox javaSortBox, quickSortBox, mergeSortBox, heapSortBox, bubbleSortBox;
+    private JCheckBox insertionSortBox, shellSortBox, mergeSortBox, quickSortBox, heapSortBox;
     private JTextArea resultsArea;
     private BarChartPanel chartPanel;
     private JLabel bestLabel;
@@ -57,17 +57,18 @@ public class Main {
             if (previewTable != null) previewTable.repaint();
         });
 
-        javaSortBox = new JCheckBox("Java Arrays.sort (TimSort)", true);
-        quickSortBox = new JCheckBox("QuickSort", true);
+        insertionSortBox = new JCheckBox("InsertionSort", true);
+        shellSortBox = new JCheckBox("ShellSort", true);
         mergeSortBox = new JCheckBox("MergeSort", true);
+        quickSortBox = new JCheckBox("QuickSort", true);
         heapSortBox = new JCheckBox("HeapSort", true);
-        bubbleSortBox = new JCheckBox("BubbleSort", false);
 
-        top.add(javaSortBox);
-        top.add(quickSortBox);
+        top.add(insertionSortBox);
+        top.add(shellSortBox);
         top.add(mergeSortBox);
+        top.add(quickSortBox);
         top.add(heapSortBox);
-        top.add(bubbleSortBox);
+
 
         JButton runBtn = new JButton("Run Sorted");
         runBtn.addActionListener(this::onRun);
@@ -155,11 +156,12 @@ public class Main {
         resultsArea.setText("");
         List<SortResult> results = new ArrayList<>();
 
-        if (javaSortBox.isSelected()) results.add(runAlgorithm("JavaSort", table, col, SortAlgorithms::javaSort));
-        if (quickSortBox.isSelected()) results.add(runAlgorithm("QuickSort", table, col, SortAlgorithms::quickSort));
-        if (mergeSortBox.isSelected()) results.add(runAlgorithm("MergeSort", table, col, SortAlgorithms::mergeSort));
-        if (heapSortBox.isSelected()) results.add(runAlgorithm("HeapSort", table, col, SortAlgorithms::heapSort));
-        if (bubbleSortBox.isSelected()) results.add(runAlgorithm("BubbleSort", table, col, SortAlgorithms::bubbleSort));
+        if (insertionSortBox.isSelected()) results.add(runAlgorithm("InsertionSort", table, col, InsertionSort::sort));
+        if (shellSortBox.isSelected()) results.add(runAlgorithm("ShellSort", table, col, ShellSort::sort));
+        if (mergeSortBox.isSelected()) results.add(runAlgorithm("MergeSort", table, col, MergeSort::sort));
+        if (quickSortBox.isSelected()) results.add(runAlgorithm("QuickSort", table, col, QuickSort::sort));
+        if (heapSortBox.isSelected()) results.add(runAlgorithm("HeapSort", table, col, HeapSort::sort));
+
 
         StringBuilder sb = new StringBuilder();
         for (SortResult r : results) {
@@ -214,29 +216,30 @@ public class Main {
     }
 
     private void applyAlgorithmToTable(String algorithm, CsvLoader.CsvTable table, int colIndex) {
-        if (table == null) return;
-        switch (algorithm) {
-            case "JavaSort":
-                SortAlgorithms.javaSort(table.rows, colIndex);
-                break;
-            case "QuickSort":
-                SortAlgorithms.quickSort(table.rows, colIndex);
-                break;
-            case "MergeSort":
-                SortAlgorithms.mergeSort(table.rows, colIndex);
-                break;
-            case "HeapSort":
-                SortAlgorithms.heapSort(table.rows, colIndex);
-                break;
-            case "BubbleSort":
-                SortAlgorithms.bubbleSort(table.rows, colIndex);
-                break;
-            default:
-                // fallback to Java sort
-                SortAlgorithms.javaSort(table.rows, colIndex);
-                break;
-        }
+    if (table == null) return;
+    switch (algorithm) {
+        case "InsertionSort":
+            InsertionSort.sort(table.rows, colIndex);
+            break;
+        case "ShellSort":
+            ShellSort.sort(table.rows, colIndex);
+            break;
+        case "MergeSort":
+            MergeSort.sort(table.rows, colIndex);
+            break;
+        case "QuickSort":
+            QuickSort.sort(table.rows, colIndex);
+            break;
+        case "HeapSort":
+            HeapSort.sort(table.rows, colIndex);
+            break;
+        default:
+            // fallback
+            QuickSort.sort(table.rows, colIndex);
+            break;
     }
+}
+
 
     private SortResult runAlgorithm(String name, CsvLoader.CsvTable table, int colIndex, AlgorithmRunner runner) {
         // Copy rows to avoid mutating original
