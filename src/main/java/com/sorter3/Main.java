@@ -254,3 +254,26 @@ public class Main {
             bestLabel.setText("Best: n/a");
         }
     }
+    private void applyAlgorithmToTable(String algorithm, CsvLoader.CsvTable table, int colIndex) {
+        if (table == null) return;
+        switch (algorithm) {
+            case "InsertionSort":
+                InsertionSort.sort(table.rows, colIndex);
+                break;
+            case "ShellSort":
+                ShellSort.sort(table.rows, colIndex);
+                break;
+            case "MergeSort":
+                MergeSort.sort(table.rows, colIndex);
+                break;
+            case "QuickSort":
+                QuickSort.sort(table.rows, colIndex);
+                break;
+            case "HeapSort":
+                HeapSort.sort(table.rows, colIndex);
+                break;
+            default:
+                QuickSort.sort(table.rows, colIndex);
+                break;
+        }
+    }
