@@ -193,3 +193,50 @@ public class Main {
                 JOptionPane.ERROR_MESSAGE);
             return; 
         }
+
+        resultsArea.setText("");
+        List<SortResult> results = new ArrayList<>();
+
+        if (insertionSortBox.isSelected()) results.add(runAlgorithm("InsertionSort", table, col, InsertionSort::sort));
+        if (shellSortBox.isSelected()) results.add(runAlgorithm("ShellSort", table, col, ShellSort::sort));
+        if (mergeSortBox.isSelected()) results.add(runAlgorithm("MergeSort", table, col, MergeSort::sort));
+        if (quickSortBox.isSelected()) results.add(runAlgorithm("QuickSort", table, col, QuickSort::sort));
+        if (heapSortBox.isSelected()) results.add(runAlgorithm("HeapSort", table, col, HeapSort::sort));
+
+
+        StringBuilder sb = new StringBuilder();
+        for (SortResult r : results) {
+            sb.append(String.format("%-15s : %6d ms\n", r.algorithm, r.durationMillis));
+            int show = Math.min(5, r.sampleRows.size());
+            for (int i = 0; i < show; i++) {
+                sb.append("  ").append(String.join(", ", r.sampleRows.get(i))).append("\n");
+            }
+            sb.append("\n");
+        }
+        resultsArea.setText(sb.toString());
+        
+        chartPanel.setResults(results);
+        chartPanel.repaint();
+        if (!results.isEmpty()) {
+            SortResult best = results.stream().min((a,b)->Long.compare(a.durationMillis,b.durationMillis)).get();
+            bestLabel.setText(String.format("Best: %s (%d ms)", best.algorithm, best.durationMillis));
+
+            BarChartPanel dialogChart = new BarChartPanel();
+            dialogChart.setResults(results);
+            dialogChart.setPreferredSize(new Dimension(480, 320));
+
+            String message = String.format("Best algorithm: %s\nDuration: %d ms", best.algorithm, best.durationMillis);
+            JDialog dlg = new JDialog(frame, "Run Summary", true);
+            dlg.setLayout(new BorderLayout(8,8));
+            JLabel lbl = new JLabel(message);
+            lbl.setBorder(BorderFactory.createEmptyBorder(8,8,0,8));
+            dlg.add(lbl, BorderLayout.NORTH);
+            dlg.add(dialogChart, BorderLayout.CENTER);
+            JButton close = new JButton("Close");
+            close.addActionListener(a -> dlg.dispose());
+            JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            bottom.add(close);
+            dlg.add(bottom, BorderLayout.SOUTH);
+            dlg.pack();
+            dlg.setLocationRelativeTo(frame);
+            dlg.setVisible(true);
