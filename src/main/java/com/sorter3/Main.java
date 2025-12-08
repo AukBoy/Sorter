@@ -67,7 +67,7 @@ public class Main {
         top.add(quickSortBox);
         top.add(heapSortBox);
 
-        JButton runBtn = new JButton("Run Benchmark");
+        JButton runBtn = new JButton("Run Sort");
         runBtn.addActionListener(this::onRun);
         top.add(runBtn);
 
