@@ -150,4 +150,12 @@ public class Main {
         }
     }
 
-    
+    private void updatePreview() {
+        columnBox.removeAllItems();
+        for (String h : table.headers) columnBox.addItem(h);
+        DefaultTableModel model = new DefaultTableModel();
+        for (String h : table.headers) model.addColumn(h);
+        int preview = Math.min(50, table.rows.size());
+        for (int i = 0; i < preview; i++) model.addRow(table.rows.get(i));
+        previewTable.setModel(model);
+    }
