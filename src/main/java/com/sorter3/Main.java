@@ -115,3 +115,39 @@ public class Main {
             System.err.println("Failed to switch theme: " + ex.getMessage());
         }
     }
+
+       private void onOpen(ActionEvent e) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File(".")); 
+
+        // Apply CSV file filter
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV Files (*.csv)", "csv");
+        chooser.setFileFilter(filter);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+
+        int r = chooser.showOpenDialog(frame);
+        
+        if (r != JFileChooser.APPROVE_OPTION) return;
+        
+        File f = chooser.getSelectedFile();
+        
+        // Manual check for file extension
+        if (!f.getName().toLowerCase().endsWith(".csv")) {
+            JOptionPane.showMessageDialog(frame, 
+                "Invalid file type selected. Please select a CSV file.", 
+                "File Error", 
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        try {
+            table = CsvLoader.load(f.getAbsolutePath());
+            updatePreview();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame, "Failed to load CSV: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    
